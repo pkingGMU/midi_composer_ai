@@ -1,0 +1,79 @@
+import numpy as np
+import random
+from keras.models import load_model
+from midiutil import MIDIFile  # For MIDI generation
+from sklearn.preprocessing import MinMaxScaler
+
+# Load the trained model
+model = load_model('trained_model.keras')
+
+# Recompile the model to avoid the warning
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+# Load the scaler (assuming you saved it during training)
+scaler = MinMaxScaler()
+
+
+
+# Function to generate MIDI sequence for a given composer
+def generate_midi(composer_id, sequence_length=200):
+    # Initialize the sequence with the composer ID and other features
+    # Example starting point (Composer_id, Midi_Pitch, Midi_Channel, etc.)
+    sequence = np.array([[composer_id, 60, 1, 60, 100, 0.0]])  # Shape (1, 7)
+    
+    # Generate MIDI note sequence using the trained model
+    for _ in range(sequence_length):
+        # Prepare the input for the model: Reshape last note to be (1, 1, 7) for input to LSTM
+        input_sequence = sequence[-1].reshape((1,10,6))  # Shape (1, 1, 7)
+
+        # Predict the next note
+        predicted_note = model.predict(input_sequence)  # Model output should be a prediction of the next note
+
+        # Inverse the normalization (scaling) to get the original scale
+        predicted_note_original_scale = scaler.inverse_transform(predicted_note)  # Inverse transform to raw scale
+
+        # Debugging: Check the shape and contents of the predicted note
+        print(f"Predicted note (raw): {predicted_note_original_scale}")
+
+        # Extract the next note (predicted note should have shape (7,))
+        next_note = predicted_note_original_scale[0]
+
+        # Ensure the output note values are integers (since MIDI pitch is an integer)
+        next_note[3] = int(next_note[3])  # Midi_Pitch (should be an integer)
+        next_note[1] = int(next_note[1])  # Duration_Beats (should be an integer)
+        next_note[4] = int(next_note[4])  # Velocity (should be an integer)
+
+        # Reshape both arrays to be 2D before appending (to avoid dimension mismatch)
+        next_note = next_note.reshape(1, -1)  # Reshape to (1, 7)
+
+        # Append the predicted note to the sequence
+        sequence = np.vstack([sequence, next_note])  # Concatenate along axis 0 (rows)
+    
+    # Convert sequence to MIDI
+    midi = MIDIFile(1)  # Create a new MIDI file with one track
+    track = 0
+    time = 0
+    midi.addTrackName(track, time, "Generated MIDI")
+    midi.addTempo(track, 0, 120)  # Set tempo (beats per minute)
+
+    # Add notes to MIDI file based on the generated sequence
+    for note in sequence:
+        pitch = int(note[3])  # Midi_Pitch
+        duration = int(note[1])  # Duration_Beats
+        velocity = int(note[4])  # Velocity
+        midi.addNote(track, 0, pitch, time, duration, velocity)  # [3] is Midi_Pitch, [1] is Duration_Beats, [4] is Velocity
+        time += duration  # Increase time by note's duration
+
+    # Debugging: Print the MIDI tracks for inspection
+    print("Generated MIDI:")
+    for i, track in enumerate(midi.tracks):
+        print(f"Track {i} Events: {track}")
+
+    # Save the generated MIDI to a file
+    with open("generated_midi.mid", 'wb') as output_file:
+        midi.writeFile(output_file)
+
+    print("MIDI file 'generated_midi.mid' has been created.")
+
+# Example of generating a MIDI sequence for a specific composer
+generate_midi(composer_id=1, sequence_length=10)  # Replace 'composer_id' with an actual ID
