@@ -28,7 +28,12 @@ d=dir('*.mid');
 h = waitbar(0,'Please wait ...');
 
 for k=1:length(d)
-	nm = readmidi(d(k).name);
+
+    try
+	    nm = readmidi(d(k).name);
+    catch
+        nm = [];
+    end
     
     if isempty(nm)
         continue

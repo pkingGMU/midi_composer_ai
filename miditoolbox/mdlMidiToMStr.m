@@ -51,20 +51,23 @@ if (rawbytes) midi.rawbytes_all = A; end
 %
 
 if ~isequal(A(1:4)',[77 84 104 100])  % double('MThd')
-    error('File does not begin with header ID (MThd)');
+    midi = [];
+    % error('File does not begin with header ID (MThd)');
 end
 
 header_len = decode_int(A(5:8));
 if (header_len == 6)
 else
-    error('Header length != 6 bytes.');
+    midi = [];
+    % error('Header length != 6 bytes.');
 end
 
 format = decode_int(A(9:10));
 if (format==0 || format==1 || format==2)
      midi.format = format;
-else    
-    error('Format does not equal 0,1,or 2');
+else
+    midi = [];
+    % error('Format does not equal 0,1,or 2');
 end
 
 num_tracks = decode_int(A(11:12));
