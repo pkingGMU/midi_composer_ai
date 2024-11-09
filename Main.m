@@ -37,7 +37,7 @@ for i = 1:length(nm)
     elseif contains(file_name, ',')
         % If no underscore, try to extract based on a comma
         composer_name = regexp(file_name, '^[^,]+', 'match', 'once');
-        piece_name = regexp(file_name, '(?<=,)(.*?)(?=\.mid)', 'match', 'once');
+        piece_name = regexp(file_name, '(?<=,)(.*?)(?=\.mid)', 'match', 'once', 'ignorecase');
     else
         % If neither underscore nor comma, set composer_name and piece_name to empty
         composer_name = '';
