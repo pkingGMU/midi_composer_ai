@@ -7,6 +7,11 @@ directory = uigetdir();
 
 [nm, name] = dir2coll(directory);
 
+%% Get length of all data
+length_of_files = sum(cellfun(@(x) size(x,1), nm));
+
+%% Initialize an empty array to hold the combined data
+combined_data = cell(length_of_files, 9);
 %% Combine data
 
 
