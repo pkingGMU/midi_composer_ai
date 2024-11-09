@@ -1,3 +1,6 @@
+% Add path 
+
+addpath(genpath('miditoolbox'))
 
 %% Convert Midi to data
 directory = uigetdir();
