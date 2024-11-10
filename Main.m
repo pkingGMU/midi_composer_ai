@@ -18,6 +18,7 @@ combined_data = cell(length_of_files, 9);
 current_idx = 1;
 
 %%
+%%
 for i = 1:length(nm)
     % Extract the current MIDI file data (assumed to be nx7)
     midi_data = nm{i};  % nm{i} is an n x 7 matrix, each row is a note
@@ -40,8 +41,8 @@ for i = 1:length(nm)
         piece_name = regexp(file_name, '(?<=,)(.*?)(?=\.mid)', 'match', 'once', 'ignorecase');
     else
         % If neither underscore nor comma, set composer_name and piece_name to empty
-        composer_name = '';
-        piece_name = '';
+        composer_name = 'N/A';
+        piece_name = 'N/A';
     end
     
     % If there's no piece name found (e.g., no underscore or comma), set piece_name to empty
@@ -55,13 +56,17 @@ for i = 1:length(nm)
     % Repeat the piece name for all rows in the current MIDI data
     piece_name_column = repmat({piece_name}, size(midi_data, 1), 1);  % Repeat for all notes
     
-    % Insert the current MIDI data, composer, and piece columns into the preallocated combined_data
+    % Create the new column with 1 in the first row and 0 in the rest
+    first_row_column = [1; zeros(size(midi_data, 1) - 1, 1)];
+    
+    % Insert the current MIDI data, composer, piece, and new column into the preallocated combined_data
     combined_data(current_idx:current_idx + size(midi_data, 1) - 1, :) = ...
-        [num2cell(midi_data), composer_name_column, piece_name_column];
+        [num2cell(midi_data), composer_name_column, piece_name_column, num2cell(first_row_column)];
     
     % Update current_idx for the next set of rows
     current_idx = current_idx + size(midi_data, 1);
 end
+
 %%
 
 
